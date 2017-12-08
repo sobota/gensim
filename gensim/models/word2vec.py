@@ -562,8 +562,7 @@ class Word2Vec(utils.SaveLoad):
             self.build_vocab(sentences, trim_rule=trim_rule)
             self.train(
                 sentences, total_examples=self.corpus_count, epochs=self.iter,
-                start_alpha=self.alpha, end_alpha=self.min_alpha
-            )
+                start_alpha=self.alpha, end_alpha=self.min_alpha, compute_loss=self.compute_loss)
         else:
             if trim_rule is not None:
                 logger.warning(
