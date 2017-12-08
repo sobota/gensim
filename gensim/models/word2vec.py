@@ -330,6 +330,7 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
             model.running_training_loss -= sum(log(expit(-1 * prod_term[1:])))  # for the sampled words
             model.running_training_loss -= log(expit(prod_term[0]))  # for the output word
             model.running_training_loss_history.append(model.running_training_loss)
+            logger.info(model.running_training_loss)
 
     if learn_vectors:
         if is_ft:
