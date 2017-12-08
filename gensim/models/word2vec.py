@@ -301,11 +301,13 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
             model.syn1[predict_word.point] += outer(ga, l1)  # learn hidden -> output
         neu1e += dot(ga, l2a)  # save error
 
+        # todo
         # loss component corresponding to hierarchical softmax
         if compute_loss:
             sgn = (-1.0)**predict_word.code  # `ch` function, 0 -> 1, 1 -> -1
             lprob = -log(expit(-sgn * prod_term))
             model.running_training_loss += sum(lprob)
+            model.running_training_loss_history.append(model.running_training_loss)
 
     if model.negative:
         # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
@@ -322,10 +324,12 @@ def train_sg_pair(model, word, context_index, alpha, learn_vectors=True, learn_h
             model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
         neu1e += dot(gb, l2b)  # save error
 
+        # todo
         # loss component corresponding to negative sampling
         if compute_loss:
             model.running_training_loss -= sum(log(expit(-1 * prod_term[1:])))  # for the sampled words
             model.running_training_loss -= log(expit(prod_term[0]))  # for the output word
+            model.running_training_loss_history.append(model.running_training_loss)
 
     if learn_vectors:
         if is_ft:
@@ -363,10 +367,12 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
             model.syn1[word.point] += outer(ga, l1)  # learn hidden -> output
         neu1e += dot(ga, l2a)  # save error
 
+        # todo
         # loss component corresponding to hierarchical softmax
         if compute_loss:
             sgn = (-1.0)**word.code  # ch function, 0-> 1, 1 -> -1
             model.running_training_loss += sum(-log(expit(-sgn * prod_term)))
+            model.running_training_loss_history.append(model.running_training_loss)
 
     if model.negative:
         # use this word (label = 1) + `negative` other random words not from this sentence (label = 0)
@@ -383,10 +389,12 @@ def train_cbow_pair(model, word, input_word_indices, l1, alpha, learn_vectors=Tr
             model.syn1neg[word_indices] += outer(gb, l1)  # learn hidden -> output
         neu1e += dot(gb, l2b)  # save error
 
+        # todo
         # loss component corresponding to negative sampling
         if compute_loss:
             model.running_training_loss -= sum(log(expit(-1 * prod_term[1:])))  # for the sampled words
             model.running_training_loss -= log(expit(prod_term[0]))  # for the output word
+            model.running_training_loss_history.append(model.running_training_loss)
 
     if learn_vectors:
         # learn input -> hidden, here for all words in the window separately
@@ -545,6 +553,9 @@ class Word2Vec(utils.SaveLoad):
         self.model_trimmed_post_training = False
         self.compute_loss = compute_loss
         self.running_training_loss = 0
+
+        self.running_training_loss_history = []
+
         if sentences is not None:
             if isinstance(sentences, GeneratorType):
                 raise TypeError("You can't pass a generator as the sentences argument. Try an iterator.")
@@ -938,7 +949,9 @@ class Word2Vec(utils.SaveLoad):
 
         if compute_loss:
             self.compute_loss = compute_loss
+
         self.running_training_loss = 0
+        self.running_training_loss_history = []
 
         logger.info(
             "training model with %i workers on %i vocabulary and %i features, "
@@ -1615,6 +1628,9 @@ class Word2Vec(utils.SaveLoad):
     def get_latest_training_loss(self):
         return self.running_training_loss
 
+    def get_training_loss_history(self):
+        """Return list of losses values generated during training"""
+        return self.running_training_loss_history
 
 class BrownCorpus(object):
     """Iterate over sentences from the Brown corpus (part of NLTK data)."""
